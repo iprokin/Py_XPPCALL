@@ -1,2 +1,2 @@
 # Py_XPPCALL
-a python binding to XPPAUT
+a python binding to <b>XPPAUT</b>
