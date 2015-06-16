@@ -1,6 +1,8 @@
 # Py_XPPCALL
 <div style="text-align:justify">
 
+<a href="https://sites.google.com/site/ilyaprokin/py_xppcall-a-python-binding-to-xppaut">https://sites.google.com/site/ilyaprokin/py_xppcall-a-python-binding-to-xppaut</a>
+
 <a href="http://www.math.pitt.edu/~bard/xpp/xpp.html">XPPAUT</a> is a great software for the analysis of dynamical systems. Many mathematical models have been implemented with XPPAUT (*.ODE file format) [search for examples at&nbsp;<a href="http://senselab.med.yale.edu/modeldb/">http://senselab.med.yale.edu/modeldb/</a>]. These implementations could be used to reproduce computational experiments and to quickly test ideas related to them. For instance, one could perform the sensitivity analysis of model's parameters&nbsp;or parameters' space searches. However, due to the graphical nature of XPPAUT,&nbsp;the batch modification of parameters of these models is problematic.&nbsp;
 <div><br>
 </div>
