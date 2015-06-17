@@ -1,0 +1,14 @@
+# Hodgkin-huxley equations
+dv/dt=(I - gna*h*(v-vna)*m^3-gk*(v-vk)*n^4-gl*(v-vl))/c
+dm/dt= am(v)*(1-m)-bm(v)*m
+dh/dt=ah(v)*(1-h)-bh(v)*h
+dn/dt=an(v)*(1-n)-bn(v)*n
+par vna=50,vk=-77,vl=-54.4,gna=120,gk=36,gl=.3,c=1,I=0
+am(v) =  .1*(v+40)/(1-exp(-(v+40)/10))
+bm(v) =  4*exp(-(v+65)/18)
+ah(v) =  .07*exp(-(v+65)/20)
+bh(v) =  1/(1+exp(-(v+35)/10))
+an(v) =  .01*(v+55)/(1-exp(-(v+55)/10))
+bn(v) =  .125*exp(-(v+65)/80)
+init v=-65,m=.052,h=.596,n=.317
+done
