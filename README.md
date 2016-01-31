@@ -14,7 +14,6 @@
 <div>I extracted the ODE source code of Hodgkin-Huxley model &nbsp;from the example at the website of XPPAUT&nbsp;<a href="http://www.math.pitt.edu/~bard/bardware/tut/newstyle.html#hh">http://www.math.pitt.edu/~bard/bardware/tut/newstyle.html#hh</a>. I saved it as <a href="https://sites.google.com/site/ilyaprokin/py_xppcall-a-python-binding-to-xppaut/hh.ode?attredirects=0">hh.ode</a>. I put it to the same folder where I have <a href="https://sites.google.com/site/ilyaprokin/py_xppcall-a-python-binding-to-xppaut/xppcall.py?attredirects=0">xppcall.py</a> and ran python from there.&nbsp;</div>
 <div><br>
 </div>
-<div><i>Note:</i> Links to all the files used here, including the code of the example, are given at the end of this page.</div>
 
 </div>
 
