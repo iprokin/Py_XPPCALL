@@ -57,7 +57,7 @@ def read_pars_values(srclines, pars_names=None):
     the dict of parameters, where keys=pars_names, values are parsed from srclines
     """
     vars_list=[]
-    i_par_lines = np.nonzero([re.search('^ *(parameters|par|param|params) (.+)$', line, flags=re.IGNORECASE) is not None for line in srclines])[0]
+    i_par_lines = np.nonzero([re.search('^ *(parameters|par|param|params|p) (.+)$', line, flags=re.IGNORECASE) is not None for line in srclines])[0]
     for i in i_par_lines:
         vars_list+=re.findall('([a-z0-9_]+) *= *([0-9\.e\-\+]+)', srclines[i].lower(), flags=re.IGNORECASE)
     d = dict(vars_list)
@@ -91,7 +91,7 @@ def change_parameters_in_ode_and_save(srclines, parameters, newfilepath):
            return matchobj.group(1)+matchobj.group(2)+lparameters[mog]
         else:
            return matchobj.group(0)
-    i_par_lines = np.nonzero([re.search('^ *(parameters|par|param|params) (.+)$', line, flags=re.IGNORECASE) is not None for line in srclines])[0]
+    i_par_lines = np.nonzero([re.search('^ *(parameters|par|param|params|p) (.+)$', line, flags=re.IGNORECASE) is not None for line in srclines])[0]
     nsrclines=srclines[:]
     for i in i_par_lines:
         nsrclines[i] = re.sub('([a-z0-9_]+)( *= *)([0-9\.e\-\+]+)', repl_in_par, nsrclines[i], flags=re.IGNORECASE)
