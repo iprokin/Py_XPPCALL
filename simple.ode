@@ -1,9 +1,13 @@
-x'=-a*y
-y'=b*x
+# lambda-omega system
 
-p a=1
-p b=1
+u'=lam*u-om*v
+v'=lam*v+om*u
 
-x(0)=1
-y(0)=0
+r = sqrt(u^2+v^2)
+lam=1-r^2
+om=1+q*(r^2-1)
+
+p q=1
+
+init u=.2,v=.5
 

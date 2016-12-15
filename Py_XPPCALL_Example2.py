@@ -3,14 +3,18 @@
 # import some modules including Py_XPPCALL
 import matplotlib.pylab as plt
 import numpy as np
-from xppcall import xpprun, read_pars_values_from_file
+from xppcall import xpprun, read_pars, read_inits
 
 # check if parameters with label 'p' will work
 # add function to change inits.
 
 # Let's check what are the parameters of the model
-pars = read_pars_values_from_file('simple.ode')
+pars = read_pars('simple.ode')
 print pars
+
+
+inits = read_inits('simple.ode')
+print inits
 
 
 
@@ -21,21 +25,38 @@ npa, vn = xpprun('simple.ode', clean_after=True)
 t = npa[:,0]
 sv = npa[:,1:]
 
-fig = plt.figure()
+fig = plt.figure(figsize=(10,5))
 ax1 = fig.add_subplot(121)
-ax1.plot(sv[:,vn.index('x')],sv[:,vn.index('y')])
+ax1.plot(sv[:,vn.index('u')],sv[:,vn.index('v')],lw=2)
+ax1.set_xlim([-1.05,1.05])
+ax1.set_ylim([-1.05,1.05])
+ax1.set_title('q=1')
 
 # Let's modify constant input current
-npa, vn = xpprun('simple.ode', parameters={'a':20.0}, clean_after=True)
+npa, vn = xpprun('simple.ode', parameters={'q':5.0}, clean_after=True)
 t = npa[:,0]
 sv = npa[:,1:]
 
 ax2 = fig.add_subplot(122)
-ax2.plot(sv[:,vn.index('x')],sv[:,vn.index('y')])
+ax2.plot(sv[:,vn.index('u')],sv[:,vn.index('v')],lw=2)
+ax2.set_xlim([-1.05,1.05])
+ax2.set_ylim([-1.05,1.05])
+ax2.set_title('q=5')
 
+fig.suptitle('Lambda-Omega System')
 
 # example with different initial conditions
+npa, vn = xpprun('simple.ode', inits={'u':-.1,'v':-.2}, clean_after=True)
+t = npa[:,0]
+sv = npa[:,1:]
 
+fig = plt.figure()
 
+ax3 = fig.add_subplot(111)
+ax3.plot(sv[:,vn.index('u')],sv[:,vn.index('v')])
+
+ax3.set_xlim([-1.05,1.05])
+ax3.set_ylim([-1.05,1.05])
+ax3.set_title('Lambda-Omega System')
 
 plt.show()
