@@ -192,19 +192,17 @@ def xpprun(filepath, xppname='xppaut', postfix='_tmp', parameters=None, inits=No
     name, ext = os.path.splitext(filename)
     wd = os.getcwd()
     rndid=''; rndid2=''; newfilepath=''
-    if parameters is not None:
+
+
+    if (parameters is not None) or (inits is not None):
         rndid='_rndid'+str(int(random()*1e15))
         filename = name+postfix+rndid+ext # change to new file
         newfilepath = os.path.join(path, filename)
-        change_parameters_in_ode_and_save(srclines, parameters, newfilepath)
+        if parameters is not None:
+            change_parameters_in_ode_and_save(srclines, parameters, newfilepath)
+        if inits is not None:
+            change_inits_in_ode_and_save(srclines, inits, newfilepath)
     
-    if inits is not None:
-        print 'inits found'
-        rndid2='_rndid'+str(int(random()*1e15))
-        filename = name+postfix+rndid+ext # change to new file
-        newfilepath = os.path.join(path, filename)
-        change_inits_in_ode_and_save(srclines, inits, newfilepath)
-
 
     if path!='':
         os.chdir(path)
@@ -221,9 +219,12 @@ def xpprun(filepath, xppname='xppaut', postfix='_tmp', parameters=None, inits=No
         ret = None
 
     if clean_after:
+        print newfilepath,outputfilepath
         if os.path.isfile(outputfilepath):
+            print newfilepath,outputfilepath
             os.remove(outputfilepath)
         if newfilepath!='':
+            print newfilepath,outputfilepath
             os.remove(newfilepath)
     return ret
 
