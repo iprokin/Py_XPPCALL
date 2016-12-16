@@ -24,6 +24,8 @@ import numpy as np
 import re
 from random import random
 
+
+
 def file_to_lines(filepath):
     with open(filepath,"r") as f:
         content = f.readlines()
@@ -57,7 +59,7 @@ def read_pars_values(srclines, pars_names=None):
     the dict of parameters, where keys=pars_names, values are parsed from srclines
     """
     vars_list=[]
-    i_par_lines = np.nonzero([re.search('^ *(parameters|par|param|params) (.+)$', line, flags=re.IGNORECASE) is not None for line in srclines])[0]
+    i_par_lines = np.nonzero([re.search('^ *(parameters|par|param|params|p) (.+)$', line, flags=re.IGNORECASE) is not None for line in srclines])[0]
     for i in i_par_lines:
         vars_list+=re.findall('([a-z0-9_]+) *= *([0-9\.e\-\+]+)', srclines[i].lower(), flags=re.IGNORECASE)
     d = dict(vars_list)
@@ -91,7 +93,7 @@ def change_parameters_in_ode_and_save(srclines, parameters, newfilepath):
            return matchobj.group(1)+matchobj.group(2)+lparameters[mog]
         else:
            return matchobj.group(0)
-    i_par_lines = np.nonzero([re.search('^ *(parameters|par|param|params) (.+)$', line, flags=re.IGNORECASE) is not None for line in srclines])[0]
+    i_par_lines = np.nonzero([re.search('^ *(parameters|par|param|params|p) (.+)$', line, flags=re.IGNORECASE) is not None for line in srclines])[0]
     nsrclines=srclines[:]
     for i in i_par_lines:
         nsrclines[i] = re.sub('([a-z0-9_]+)( *= *)([0-9\.e\-\+]+)', repl_in_par, nsrclines[i], flags=re.IGNORECASE)
@@ -99,7 +101,63 @@ def change_parameters_in_ode_and_save(srclines, parameters, newfilepath):
     with open(newfilepath, 'w') as f:
         f.write(nsrc)
 
-def xpprun(filepath, xppname='xppaut', postfix='_tmp', parameters=None, clean_after=False):
+
+def read_init_values(srclines, init_names=None):
+    """ srclines - an ODE-file content in the list of strings,
+    if init_names is None all parameters will be read
+    init_names - the list of parameters names
+
+    return:
+    the dict of parameters, where keys=pars_names, values are parsed from srclines
+    """
+    vars_list=[]
+    i_init_lines = np.nonzero([re.search('^ *(init) (.+)$', line, flags=re.IGNORECASE) is not None for line in srclines])[0]
+    for i in i_init_lines:
+
+        vars_list+=re.findall('([a-z0-9_]+) *= *([0-9\.e\-\+]+)', srclines[i].lower(), flags=re.IGNORECASE)
+    d = dict(vars_list)
+    if init_names is None:
+        return d
+    else:
+        return {pn:d[pn] for pn in init_names}
+
+def read_init_values_from_file(filepath, init_names=None):
+    """
+    filepath - path to a .ode file
+    init_names - the list of parameters names
+    if init_names is None all parameters will be read
+
+    return:
+    the dict of parameters, where keys=pars_names, values are parsed from .ode file
+    """
+    return read_init_values(file_to_lines(filepath), init_names=init_names)
+
+def change_inits_in_ode_and_save(srclines, inits, newfilepath):
+    """
+    srclines - an ODE-file content in the list of strings,
+    inits - the dict of inits to set up new values, all keys in low register!
+    newfilepath - path to a new ODE file with modified inits
+    """
+    linits = {pn.lower():(lambda x: repr(x) if not isinstance(x,str) else x)(pv) for pn,pv in inits.iteritems()}
+    pnames = linits.keys()
+    def repl_in_par(matchobj):
+        mog = matchobj.group(1).lower()
+        if mog in pnames:
+           return matchobj.group(1)+matchobj.group(2)+linits[mog]
+        else:
+           return matchobj.group(0)
+    i_par_lines = np.nonzero([re.search('^ *(init) (.+)$', line, flags=re.IGNORECASE) is not None for line in srclines])[0]
+    nsrclines=srclines[:]
+    for i in i_par_lines:
+        nsrclines[i] = re.sub('([a-z0-9_]+)( *= *)([0-9\.e\-\+]+)', repl_in_par, nsrclines[i], flags=re.IGNORECASE)
+    nsrc = ''.join(nsrclines)
+    with open(newfilepath, 'w') as f:
+        f.write(nsrc)
+
+
+
+
+def xpprun(filepath, xppname='xppaut', postfix='_tmp', parameters=None, inits=None, clean_after=False):
     """
     A simple interface to xppaut. It runs xpp in a silent mode 'xpp some_ode_file.ode -silent'
     and analyses the result of computation, a file produced by xpp (output.dat by default).
@@ -133,15 +191,24 @@ def xpprun(filepath, xppname='xppaut', postfix='_tmp', parameters=None, clean_af
     path, filename = os.path.split(filepath)
     name, ext = os.path.splitext(filename)
     wd = os.getcwd()
-    rndid=''; newfilepath=''
+    rndid=''; rndid2=''; newfilepath=''
     if parameters is not None:
         rndid='_rndid'+str(int(random()*1e15))
         filename = name+postfix+rndid+ext # change to new file
         newfilepath = os.path.join(path, filename)
         change_parameters_in_ode_and_save(srclines, parameters, newfilepath)
+    
+    if inits is not None:
+        print 'inits found'
+        rndid2='_rndid'+str(int(random()*1e15))
+        filename = name+postfix+rndid+ext # change to new file
+        newfilepath = os.path.join(path, filename)
+        change_inits_in_ode_and_save(srclines, inits, newfilepath)
+
+
     if path!='':
         os.chdir(path)
-    outputfile = 'output%s.dat'%rndid
+    outputfile = 'output%s.dat'%(rndid+rndid2)
     outputfilepath = os.path.join(path, outputfile)
 
     try:
@@ -159,6 +226,10 @@ def xpprun(filepath, xppname='xppaut', postfix='_tmp', parameters=None, clean_af
         if newfilepath!='':
             os.remove(newfilepath)
     return ret
+
+read_pars = read_pars_values_from_file
+read_inits = read_init_values_from_file
+
 
 if __name__ == "__main__":
     pass
