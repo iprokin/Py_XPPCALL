@@ -50,6 +50,37 @@ def search_state_vars_in_srclines(srclines):
                 aux.append(so.group(3).lower())
     return der+aux
 
+def read_numerics_settings(srclines, num_names=None):
+    """ srclines - an ODE-file content in the list of strings,
+    if num_names is None all non-default numerical parameters will be read
+    num_names - the list of numerical options
+
+    return:
+    the dict of parameters, where keys=num_names, values are parsed from srclines
+    """
+    vars_list=[]
+    i_num_lines = np.nonzero([re.search('^ *(@) (.+)$', line, flags=re.IGNORECASE) is not None for line in srclines])[0]
+    for i in i_num_lines:
+        vars_list+=re.findall('([a-z0-9_]+) *= *([0-9\.e\-\+]+)', srclines[i].lower(), flags=re.IGNORECASE)
+    d = dict(vars_list)
+    if num_names is None:
+        return d
+    else:
+        return {pn:d[pn] for pn in num_names}
+
+def read_numerics_settings_from_file(filepath, num_names=None):
+    """
+    filepath - path to a .ode file
+    num_names - the list of numerical options
+    if num_names is None all non-default numerical options will be read
+
+    return:
+    the dict of parameters, where keys=pars_names, values are parsed from .ode file
+    """
+    return read_numerics_settings(file_to_lines(filepath), num_names=num_names)
+
+
+
 def read_pars_values(srclines, pars_names=None):
     """ srclines - an ODE-file content in the list of strings,
     if pars_names is None all parameters will be read
@@ -219,18 +250,15 @@ def xpprun(filepath, xppname='xppaut', postfix='_tmp', parameters=None, inits=No
         ret = None
 
     if clean_after:
-        print newfilepath,outputfilepath
         if os.path.isfile(outputfilepath):
-            print newfilepath,outputfilepath
             os.remove(outputfilepath)
         if newfilepath!='':
-            print newfilepath,outputfilepath
             os.remove(newfilepath)
     return ret
 
 read_pars = read_pars_values_from_file
 read_inits = read_init_values_from_file
-
+read_numerics = read_numerics_settings_from_file
 
 if __name__ == "__main__":
     pass

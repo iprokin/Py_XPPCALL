@@ -3,7 +3,7 @@
 # import some modules including Py_XPPCALL
 import matplotlib.pylab as plt
 import numpy as np
-from xppcall import xpprun, read_pars, read_inits
+from xppcall import xpprun, read_pars, read_inits, read_numerics
 
 # check if parameters with label 'p' will work
 # add function to change inits.
@@ -16,7 +16,8 @@ print pars
 inits = read_inits('simple.ode')
 print inits
 
-
+numerics = read_numerics('simple.ode')
+print numerics
 
 # Note: XPPAUT is not case sensitive. In Py_XPPCALL, the names of parameters and variables were chosen to be in lower case.
 
