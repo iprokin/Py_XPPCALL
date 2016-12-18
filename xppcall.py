@@ -50,6 +50,37 @@ def search_state_vars_in_srclines(srclines):
                 aux.append(so.group(3).lower())
     return der+aux
 
+def read_numerics_settings(srclines, num_names=None):
+    """ srclines - an ODE-file content in the list of strings,
+    if num_names is None all non-default numerical parameters will be read
+    num_names - the list of numerical options
+
+    return:
+    the dict of numerical options, where keys=num_names, values are parsed from srclines
+    """
+    vars_list=[]
+    i_num_lines = np.nonzero([re.search('^ *(@) (.+)$', line, flags=re.IGNORECASE) is not None for line in srclines])[0]
+    for i in i_num_lines:
+        vars_list+=re.findall('([a-z0-9_]+) *= *([0-9\.e\-\+]+)', srclines[i].lower(), flags=re.IGNORECASE)
+    d = dict(vars_list)
+    if num_names is None:
+        return d
+    else:
+        return {pn:d[pn] for pn in num_names}
+
+def read_numerics_settings_from_file(filepath, num_names=None):
+    """
+    filepath - path to a .ode file
+    num_names - the list of numerical options
+    if num_names is None all non-default numerical options will be read
+
+    return:
+    the dict of numerical options, where keys=num_names, values are parsed from .ode file
+    """
+    return read_numerics_settings(file_to_lines(filepath), num_names=num_names)
+
+
+
 def read_pars_values(srclines, pars_names=None):
     """ srclines - an ODE-file content in the list of strings,
     if pars_names is None all parameters will be read
@@ -192,19 +223,17 @@ def xpprun(filepath, xppname='xppaut', postfix='_tmp', parameters=None, inits=No
     name, ext = os.path.splitext(filename)
     wd = os.getcwd()
     rndid=''; rndid2=''; newfilepath=''
-    if parameters is not None:
+
+
+    if (parameters is not None) or (inits is not None):
         rndid='_rndid'+str(int(random()*1e15))
         filename = name+postfix+rndid+ext # change to new file
         newfilepath = os.path.join(path, filename)
-        change_parameters_in_ode_and_save(srclines, parameters, newfilepath)
+        if parameters is not None:
+            change_parameters_in_ode_and_save(srclines, parameters, newfilepath)
+        if inits is not None:
+            change_inits_in_ode_and_save(srclines, inits, newfilepath)
     
-    if inits is not None:
-        print 'inits found'
-        rndid2='_rndid'+str(int(random()*1e15))
-        filename = name+postfix+rndid+ext # change to new file
-        newfilepath = os.path.join(path, filename)
-        change_inits_in_ode_and_save(srclines, inits, newfilepath)
-
 
     if path!='':
         os.chdir(path)
@@ -229,7 +258,7 @@ def xpprun(filepath, xppname='xppaut', postfix='_tmp', parameters=None, inits=No
 
 read_pars = read_pars_values_from_file
 read_inits = read_init_values_from_file
-
+read_numerics = read_numerics_settings_from_file
 
 if __name__ == "__main__":
     pass
