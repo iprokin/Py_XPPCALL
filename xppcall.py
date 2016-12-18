@@ -56,7 +56,7 @@ def read_numerics_settings(srclines, num_names=None):
     num_names - the list of numerical options
 
     return:
-    the dict of parameters, where keys=num_names, values are parsed from srclines
+    the dict of numerical options, where keys=num_names, values are parsed from srclines
     """
     vars_list=[]
     i_num_lines = np.nonzero([re.search('^ *(@) (.+)$', line, flags=re.IGNORECASE) is not None for line in srclines])[0]
@@ -75,7 +75,7 @@ def read_numerics_settings_from_file(filepath, num_names=None):
     if num_names is None all non-default numerical options will be read
 
     return:
-    the dict of parameters, where keys=pars_names, values are parsed from .ode file
+    the dict of numerical options, where keys=num_names, values are parsed from .ode file
     """
     return read_numerics_settings(file_to_lines(filepath), num_names=num_names)
 
