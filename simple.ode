@@ -1,5 +1,3 @@
-# lambda-omega system
-
 u'=lam*u-om*v
 v'=lam*v+om*u
 
