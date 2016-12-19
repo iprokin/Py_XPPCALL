@@ -22,7 +22,7 @@ print numerics
 # Note: XPPAUT is not case sensitive. In Py_XPPCALL, the names of parameters and variables were chosen to be in lower case.
 
 # Let's plot a solution with default parameters and inits specified in the .ODE file
-npa, vn = xpprun('simple.ode', clean_after=True)
+npa, vn = xpprun('simple.ode', clean_after=False)
 t = npa[:,0]
 sv = npa[:,1:]
 
@@ -34,7 +34,7 @@ ax1.set_ylim([-1.05,1.05])
 ax1.set_title('q=1')
 
 # Let's modify one of the parameters
-npa, vn = xpprun('simple.ode', parameters={'q':5.0}, clean_after=True)
+npa, vn = xpprun('simple.ode', parameters={'q':5.0}, clean_after=False)
 t = npa[:,0]
 sv = npa[:,1:]
 

@@ -188,7 +188,7 @@ def change_inits_in_ode_and_save(srclines, inits, newfilepath):
 
 
 
-def xpprun(filepath, xppname='xppaut', postfix='_tmp', parameters=None, inits=None, clean_after=False):
+def xpprun(filepath, version=8, xppname='xppaut', postfix='_tmp', parameters=None, inits=None, clean_after=False):
     """
     A simple interface to xppaut. It runs xpp in a silent mode 'xpp some_ode_file.ode -silent'
     and analyses the result of computation, a file produced by xpp (output.dat by default).
@@ -203,8 +203,9 @@ def xpprun(filepath, xppname='xppaut', postfix='_tmp', parameters=None, inits=No
     If you pass the dict of parameters, then the new .ode will be created from your original .ode and xppaut will be run with it.
 
     Input:
-
+    
     filepath - path to ode file. Ex.: /home/user/xppfile.ode (Linux), D:/some_folder/xppfile.ode (Windows)
+    version - xpp version number. If for example you are running xpp version 6.11, use version=6.
     xppname - name of xpp as you call it from Terminal
     postfix - the postfix of new .ode file made out of original
     parameters - the dict of parameters to be modified
@@ -218,42 +219,91 @@ def xpprun(filepath, xppname='xppaut', postfix='_tmp', parameters=None, inits=No
     plt.plot(npa[:,0], npa[:, 1+vn.index('NaCl')])
 
     """
+
     srclines = file_to_lines(filepath)
     path, filename = os.path.split(filepath)
     name, ext = os.path.splitext(filename)
     wd = os.getcwd()
     rndid=''; rndid2=''; newfilepath=''
 
+    if version < 8:
+        # legacy code. Adds compatibility to older xpp versions that do not have command line inputs
+        # forwards compatible for now
 
-    if (parameters is not None) or (inits is not None):
-        rndid='_rndid'+str(int(random()*1e15))
-        filename = name+postfix+rndid+ext # change to new file
-        newfilepath = os.path.join(path, filename)
-        if parameters is not None:
-            change_parameters_in_ode_and_save(srclines, parameters, newfilepath)
-        if inits is not None:
+
+        if (parameters is not None) or (inits is not None):
+            rndid='_rndid'+str(int(random()*1e15))
+            filename = name+postfix+rndid+ext # change to new file
+            newfilepath = os.path.join(path, filename)
+            if parameters is not None:
+                change_parameters_in_ode_and_save(srclines, parameters, newfilepath)
+            if inits is not None:
+                change_inits_in_ode_and_save(srclines, inits, newfilepath)
+
+
+        if path!='':
+            os.chdir(path)
+        outputfile = 'output%s.dat'%(rndid+rndid2)
+        outputfilepath = os.path.join(path, outputfile)
+
+        try:
+            res = subprocess.check_output("%s %s -silent -outfile %s" % (xppname, filename, outputfile), stderr=subprocess.STDOUT, shell=True)
+            os.chdir(wd)
+            out = np.genfromtxt(outputfilepath, delimiter=' ')
+            vn = search_state_vars_in_srclines(srclines)
+            ret = out, vn
+        except:
+            ret = None
+
+
+
+    else:
+        # if xpp version >= 8, run using command line inputs.
+
+        # clean inputs into cli compatible format
+        inputstr = ''
+        
+        if (parameters is not None) and (parameters != {}):
+            # for each parameter, append to string
+            for opt in parameters:
+                inputstr += opt+'='+str(parameters[opt])+';'
+
+        # remove trailing semicolon
+        inputstr = inputstr[:-1]
+
+        if (inits is not None) and (inits != {}):
+            # for each input, append to string
+            rndid='_rndid'+str(int(random()*1e15))
+            filename = name+postfix+rndid+ext # change to new file
+            newfilepath = os.path.join(path, filename)
             change_inits_in_ode_and_save(srclines, inits, newfilepath)
-    
 
-    if path!='':
-        os.chdir(path)
-    outputfile = 'output%s.dat'%(rndid+rndid2)
-    outputfilepath = os.path.join(path, outputfile)
 
-    try:
-        res = subprocess.check_output("%s %s -silent -outfile %s" % (xppname, filename, outputfile), stderr=subprocess.STDOUT, shell=True)
-        os.chdir(wd)
-        out = np.genfromtxt(outputfilepath, delimiter=' ')
-        vn = search_state_vars_in_srclines(srclines)
-        ret = out, vn
-    except:
-        ret = None
+        print "%s %s -silent -with %s -runnow" % (xppname, filename, inputstr)
+        outputfile = 'output.dat'
+        outputfilepath = os.path.join(path, outputfile)
+        
+        try:
+            res = subprocess.check_output("%s %s -silent -with %s -runnow" % (xppname, filename, inputstr), stderr=subprocess.STDOUT, shell=True)
+            os.chdir(wd)
+
+            out = np.genfromtxt(outputfilepath, delimiter=' ')
+
+            vn = search_state_vars_in_srclines(srclines)
+
+            ret = out, vn
+            
+        except:
+
+            ret = None
 
     if clean_after:
         if os.path.isfile(outputfilepath):
             os.remove(outputfilepath)
         if newfilepath!='':
             os.remove(newfilepath)
+
+
     return ret
 
 read_pars = read_pars_values_from_file
