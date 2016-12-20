@@ -279,12 +279,12 @@ def xpprun(filepath, version=8, xppname='xppaut', postfix='_tmp', parameters=Non
             change_inits_in_ode_and_save(srclines, inits, newfilepath)
 
 
-        print "%s %s -silent -with %s -runnow" % (xppname, filename, inputstr)
+        #print "%s %s -silent -with %s -runnow" % (xppname, filename, inputstr)
         outputfile = 'output.dat'
         outputfilepath = os.path.join(path, outputfile)
         
         try:
-            res = subprocess.check_output("%s %s -silent -with %s -runnow" % (xppname, filename, inputstr), stderr=subprocess.STDOUT, shell=True)
+            res = subprocess.check_output("%s %s -silent -with '%s' -runnow" % (xppname, filename, inputstr), stderr=subprocess.STDOUT, shell=True)
             os.chdir(wd)
 
             out = np.genfromtxt(outputfilepath, delimiter=' ')
