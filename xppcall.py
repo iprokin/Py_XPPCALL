@@ -226,6 +226,8 @@ def xpprun(filepath, version=8, xppname='xppaut', postfix='_tmp', parameters=Non
     wd = os.getcwd()
     rndid=''; rndid2=''; newfilepath=''
 
+
+
     if version < 8:
         # legacy code. Adds compatibility to older xpp versions that do not have command line inputs
         # forwards compatible for now
@@ -235,19 +237,21 @@ def xpprun(filepath, version=8, xppname='xppaut', postfix='_tmp', parameters=Non
             rndid='_rndid'+str(int(random()*1e15))
             filename = name+postfix+rndid+ext # change to new file
             newfilepath = os.path.join(path, filename)
+            fullfilename = os.path.join(path, filename)
             if parameters is not None:
                 change_parameters_in_ode_and_save(srclines, parameters, newfilepath)
             if inits is not None:
                 change_inits_in_ode_and_save(srclines, inits, newfilepath)
-
-
+        else:
+            fullfilename = os.path.join(path, filename)
+        
         if path!='':
             os.chdir(path)
         outputfile = 'output%s.dat'%(rndid+rndid2)
         outputfilepath = os.path.join(path, outputfile)
 
         try:
-            res = subprocess.check_output("%s %s -silent -outfile %s" % (xppname, filename, outputfile), stderr=subprocess.STDOUT, shell=True)
+            res = subprocess.check_output("%s %s -silent -outfile %s" % (xppname, fullfilename, outputfilepath), stderr=subprocess.STDOUT, shell=True)
             os.chdir(wd)
             out = np.genfromtxt(outputfilepath, delimiter=' ')
             vn = search_state_vars_in_srclines(srclines)
@@ -256,13 +260,13 @@ def xpprun(filepath, version=8, xppname='xppaut', postfix='_tmp', parameters=Non
             ret = None
 
 
-
+        
     else:
         # if xpp version >= 8, run using command line inputs.
 
         # clean inputs into cli compatible format
         inputstr = ''
-        
+
         if (parameters is not None) and (parameters != {}):
             # for each parameter, append to string
             for opt in parameters:
@@ -276,15 +280,19 @@ def xpprun(filepath, version=8, xppname='xppaut', postfix='_tmp', parameters=Non
             rndid='_rndid'+str(int(random()*1e15))
             filename = name+postfix+rndid+ext # change to new file
             newfilepath = os.path.join(path, filename)
+            fullfilename = os.path.join(path, filename)
             change_inits_in_ode_and_save(srclines, inits, newfilepath)
+        else:
+            fullfilename = os.path.join(path, filename)
 
 
-        #print "%s %s -silent -with %s -runnow" % (xppname, filename, inputstr)
         outputfile = 'output.dat'
         outputfilepath = os.path.join(path, outputfile)
-        
+
         try:
-            res = subprocess.check_output("%s %s -silent -with '%s' -runnow" % (xppname, filename, inputstr), stderr=subprocess.STDOUT, shell=True)
+
+            res = subprocess.check_output("%s %s -silent -with '%s' -runnow -outfile %s" % (xppname, fullfilename, inputstr,outputfilepath), stderr=subprocess.STDOUT, shell=True)
+
             os.chdir(wd)
 
             out = np.genfromtxt(outputfilepath, delimiter=' ')
@@ -294,7 +302,7 @@ def xpprun(filepath, version=8, xppname='xppaut', postfix='_tmp', parameters=Non
             ret = out, vn
             
         except:
-
+            print 'xpp was not called properly. check that xpp is installed and its alias.'
             ret = None
 
     if clean_after:
