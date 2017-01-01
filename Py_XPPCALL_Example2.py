@@ -12,10 +12,11 @@ from xppcall import xpprun, read_pars, read_inits, read_numerics
 pars = read_pars('simple.ode')
 print pars
 
-
+# print inits
 inits = read_inits('simple.ode')
 print inits
 
+# print options
 numerics = read_numerics('simple.ode')
 print numerics
 

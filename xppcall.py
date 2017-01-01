@@ -208,7 +208,7 @@ def change_inits_in_ode_and_save(srclines, inits, newfilepath):
         dnelist += '\n'
         srclines.append(dnelist)
         srclines.append('d')
-    print srclines
+    #print srclines
 
 
     nsrclines=srclines[:]
