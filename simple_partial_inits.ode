@@ -1,0 +1,12 @@
+u'=lam*u-om*v
+v'=lam*v+om*u
+
+r = sqrt(u^2+v^2)
+lam=1-r^2
+om=1+q*(r^2-1)
+
+p q=1
+
+init u=.2
+
+@ dt=.01,total=100
