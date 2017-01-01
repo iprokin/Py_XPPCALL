@@ -177,7 +177,40 @@ def change_inits_in_ode_and_save(srclines, inits, newfilepath):
            return matchobj.group(1)+matchobj.group(2)+linits[mog]
         else:
            return matchobj.group(0)
+
+    # get lines of inits
     i_par_lines = np.nonzero([re.search('^ *(init) (.+)$', line, flags=re.IGNORECASE) is not None for line in srclines])[0]
+    #print 'i_par_lines', i_par_lines
+
+    # get line of 'done' flag. empty string if it does not exist.
+    i_d_line = np.nonzero([re.search('^ *(d)|^ *(done)',line,flags=re.IGNORECASE) is not None for line in srclines])[0]
+
+    # if the done flag position is empty, return -1
+    # else return the position number.
+    if i_d_line.size == 0:
+        i_d_line = -1
+    else:
+        i_d_line = i_d_line[0]
+
+    # mark which inits exist and which do not.
+    # for each i_par_lines, iterate over variables
+    dnelist = 'init '
+    idx = 0
+    
+    for i in range(len(i_par_lines)):
+        for k in inits:
+            if not(k in srclines[i_par_lines[i]]):
+                dnelist += k+'='+str(inits[k])
+
+    if dnelist != 'init ':
+        # if new inits defined, remove done flag, move to end
+        srclines[i_d_line] = ''
+        dnelist += '\n'
+        srclines.append(dnelist)
+        srclines.append('d')
+    print srclines
+
+
     nsrclines=srclines[:]
     for i in i_par_lines:
         nsrclines[i] = re.sub('([a-z0-9_]+)( *= *)([0-9\.e\-\+]+)', repl_in_par, nsrclines[i], flags=re.IGNORECASE)
@@ -185,6 +218,14 @@ def change_inits_in_ode_and_save(srclines, inits, newfilepath):
     with open(newfilepath, 'w') as f:
         f.write(nsrc)
 
+
+def check_if_in_ode(srclines,inits):
+    """
+    check whether a set of inits are listed in an ODE
+    return {dictonary of existing guys}, {dictionary of nonexisting guys}
+    """
+    i_par_lines = np.nonzero([re.search('^ *(init) (.+)$', line, flags=re.IGNORECASE) is not None for line in srclines])[0]
+    return i_par_lines
 
 
 
