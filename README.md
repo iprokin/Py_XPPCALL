@@ -119,3 +119,7 @@ Out[]:
 ![](py_xppcall-a-python-binding-to-xppaut/4.png)
 
 ### Congrats! We got a pretty good fit.
+
+Notes:
+-All initial conditions must be initialized using the init command, e.g. "init x=2,y=1".
+-This script currently does not support initialization of arrays (e.g., "init x[0..10]=1"), or the syntax "x(0)=2".
