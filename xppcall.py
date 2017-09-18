@@ -25,6 +25,15 @@ import re
 from random import random
 
 
+# initial condition regex. The syntax differs depending on scalar or array.
+# if scalar inits, we have 'init v=*' or 'v(0)=*'
+# if array init, we have 'init v[0..10]=*' or 'v[0..10](0)=*'
+
+# scalar inits
+init_re_sc1 = '^ *(init) (.+)$'
+init_re_sc2 = '^ *(.+ *\(0\) *.+)$'
+
+# array inits coming soon...
 
 def file_to_lines(filepath):
     with open(filepath,"r") as f:
@@ -124,6 +133,7 @@ def change_parameters_in_ode_and_save(srclines, parameters, newfilepath):
            return matchobj.group(1)+matchobj.group(2)+lparameters[mog]
         else:
            return matchobj.group(0)
+
     i_par_lines = np.nonzero([re.search('^ *(parameters|par|param|params|p) (.+)$', line, flags=re.IGNORECASE) is not None for line in srclines])[0]
     nsrclines=srclines[:]
     for i in i_par_lines:
@@ -141,11 +151,23 @@ def read_init_values(srclines, init_names=None):
     return:
     the dict of parameters, where keys=pars_names, values are parsed from srclines
     """
-    vars_list=[]
-    i_init_lines = np.nonzero([re.search('^ *(init) (.+)$', line, flags=re.IGNORECASE) is not None for line in srclines])[0]
-    for i in i_init_lines:
+    vars_list_sc1=[]
+    vars_list_sc2=[]
+    i_init_lines = np.nonzero([re.search(init_re_sc1+'|'+init_re_sc2, line, flags=re.IGNORECASE) is not None for line in srclines])[0]
 
-        vars_list+=re.findall('([a-z0-9_]+) *= *([0-9\.e\-\+]+)', srclines[i].lower(), flags=re.IGNORECASE)
+    for i in i_init_lines:
+        vars_list_sc1+=re.findall('([a-z0-9_]+) *= *([0-9\.e\-\+]+)', srclines[i].lower(), flags=re.IGNORECASE)
+        vars_list_sc2+=re.findall('([a-z0-9_]+\(0\)) *= *([0-9\.e\-\+]+)', srclines[i].lower(), flags=re.IGNORECASE)
+
+    # remove '(0)' from vars_list_sc2
+    for i in range(len(vars_list_sc2)):
+        tup = vars_list_sc2[i]
+        var = tup[0]
+        var_pruned = var[:-3]
+        tup2 = (var_pruned,tup[1])
+        vars_list_sc2[i] = tup2
+
+    vars_list = vars_list_sc1 + vars_list_sc2
     d = dict(vars_list)
     if init_names is None:
         return d
@@ -163,6 +185,7 @@ def read_init_values_from_file(filepath, init_names=None):
     """
     return read_init_values(file_to_lines(filepath), init_names=init_names)
 
+
 def change_inits_in_ode_and_save(srclines, inits, newfilepath):
     """
     srclines - an ODE-file content in the list of strings,
@@ -172,14 +195,24 @@ def change_inits_in_ode_and_save(srclines, inits, newfilepath):
     linits = {pn.lower():(lambda x: repr(x) if not isinstance(x,str) else x)(pv) for pn,pv in inits.iteritems()}
     pnames = linits.keys()
     def repl_in_par(matchobj):
+
         mog = matchobj.group(1).lower()
-        if mog in pnames:
-           return matchobj.group(1)+matchobj.group(2)+linits[mog]
+        # if init is used as v(0)=*, account for this fact.
+        if matchobj.group(2) == '(0)':
+
+            if mog in pnames:
+                return matchobj.group(1)+matchobj.group(2)+matchobj.group(3)+linits[mog]
+            else:
+                return matchobj.group(0)
         else:
-           return matchobj.group(0)
+
+            if mog in pnames:
+                return matchobj.group(1)+matchobj.group(2)+linits[mog]
+            else:
+                return matchobj.group(0)
 
     # get lines of inits
-    i_par_lines = np.nonzero([re.search('^ *(init) (.+)$', line, flags=re.IGNORECASE) is not None for line in srclines])[0]
+    i_par_lines = np.nonzero([re.search(init_re_sc1+'|'+init_re_sc2, line, flags=re.IGNORECASE) is not None for line in srclines])[0]
     #print 'i_par_lines', i_par_lines
 
     # get line of 'done' flag. empty string if it does not exist.
@@ -193,38 +226,77 @@ def change_inits_in_ode_and_save(srclines, inits, newfilepath):
         i_d_line = i_d_line[0]
 
     # mark which inits exist and which do not.
-    # for each i_par_lines, iterate over variables
+
     dnelist = 'init '
     idx = 0
+
+    # create list for deletion of state variable keys that do not exist
+    delete_keys = []
+
+    # cram all inits into one line
+    combinedlist = ''
     
     for i in range(len(i_par_lines)):
+        combinedlist += srclines[i_par_lines[i]]
+    
+    """
+    # for each i_par_lines, iterate over variables    
+    for i in range(len(i_par_lines)):
+
+        # iterate over user-input initial conditions
         for k in inits:
+            
+            
+            print k,srclines[i_par_lines[i]]
+            # if the user-input initial condition is not in the code...
+            # verify that this init is in fact a state variable
             if not(k in srclines[i_par_lines[i]]):
-                # verify that this init is a state variable
+
                 vn = search_state_vars_in_srclines(srclines)
-                if k in vn:
+
+                if k in vn: # if state variable exists, take note that the init was not defined in the ode script
                     dnelist += k+'='+str(inits[k])
                 else:
-                    # mark key for deletion
+                    # if the state variable does not exist, ignore.
                     delete_keys.append(k)
+    """
 
-    # delete extraneous keys
+    # for each i_par_lines, iterate over variables    
+    
+    # iterate over user-input initial conditions
+    for k in inits:
+            
+        # if the user-input initial condition is not in the code...
+        # verify that this init is in fact a state variable
+        if not(k in combinedlist):
+            
+            vn = search_state_vars_in_srclines(srclines)
+            
+            if k in vn: # if state variable exists, take note that the init was not defined in the ode script
+                dnelist += k+'='+str(inits[k])
+            else:
+                # if the state variable does not exist, ignore.
+                delete_keys.append(k)
+
+    # delete the state variables that do not exist
     for key in delete_keys:
         del inits[key]
 
-
+    # if there exist user-defined inits (not initialized in the script) that are existing state variables ...
     if dnelist != 'init ':
-        # if new inits defined, remove done flag, move to end
+        # if new inits defined, move done flag to end
         srclines[i_d_line] = ''
         dnelist += '\n'
-        srclines.append(dnelist)
+        srclines.append(dnelist) # add the new inits
         srclines.append('d')
     #print srclines
 
 
+    
     nsrclines=srclines[:]
     for i in i_par_lines:
-        nsrclines[i] = re.sub('([a-z0-9_]+)( *= *)([0-9\.e\-\+]+)', repl_in_par, nsrclines[i], flags=re.IGNORECASE)
+        nsrclines[i] = re.sub('([a-z0-9_]+)( *\( *0 *\) *)( *= *)([0-9\.e\-\+]+)', repl_in_par, nsrclines[i], flags=re.IGNORECASE)
+
     nsrc = ''.join(nsrclines)
     with open(newfilepath, 'w') as f:
         f.write(nsrc)
@@ -235,7 +307,7 @@ def check_if_in_ode(srclines,inits):
     check whether a set of inits are listed in an ODE
     return {dictonary of existing guys}, {dictionary of nonexisting guys}
     """
-    i_par_lines = np.nonzero([re.search('^ *(init) (.+)$', line, flags=re.IGNORECASE) is not None for line in srclines])[0]
+    i_par_lines = np.nonzero([re.search(init_re_sc1+'|'+init_re_sc2, line, flags=re.IGNORECASE) is not None for line in srclines])[0]
     return i_par_lines
 
 
