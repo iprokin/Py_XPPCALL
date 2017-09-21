@@ -1,0 +1,22 @@
+# example taken from http://www.math.pitt.edu/~bard/xpp/help/xppexample.html
+
+# schnakenberg PDE 5 points
+# interlaced
+f(u,v)=-u+v*u^2
+g(u,v)=a-v*u^2
+u0'=f(u0,v0)+duh*(u1-u0)
+v0'=g(u0,v0)+dvh*(v1-v0)
+%[1..3]
+u[j]'=f(u[j],v[j])+duh*(u[j+1]-2*u[j]+u[j-1])
+v[j]'=g(u[j],v[j])+dvh*(v[j+1]-2*v[j]+v[j-1])
+%
+u4'=f(u4,v4)+duh*(u3-u4)
+v4'=g(u4,v4)+dvh*(v3-v4)
+par a=1.05,du=5,dv=75,h=.2
+!duh=du/(h*h)
+!dvh=dv/(h*h)
+init u0=1.5,u1=1.3,u2=1.1,v0=1.05,v1=1.05,v2=1.05
+init u[3..4]=1.05,v[3..4]=1.05
+@ dt=.1,nout=50,total=50,meth=cvode,tol=1e-5,atol=1e-5
+@ bandlo=2,bandup=2
+done
