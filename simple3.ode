@@ -1,0 +1,20 @@
+# array initial condition
+
+u'=lam*u-om*v
+v'=lam*v+om*u
+
+r = sqrt(u^2+v^2)
+lam=1-r^2
+om=1+q*(r^2-1)
+
+p q=1
+
+u(0 )=.2
+v(0)=.5
+
+@ dt=.01,total=100
+
+
+
+
+d

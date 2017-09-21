@@ -31,7 +31,10 @@ from random import random
 
 # scalar inits
 init_re_sc1 = '^ *(init) (.+)$'
-init_re_sc2 = '^ *(.+ *\(0\) *.+)$'
+init_re_sc2 = '^ *(.+ *\( *0 *\) *.+)$'
+init_re_ar1 = '^ *(init) (.+ *\[[0-9]+\.\.[0-9]+\] *.+)$'
+#init_re_ar1b = '^ *(init) (.+ *\[[0-9]+\.\.[0-9]+\] *.+)$'
+init_re_ar2 = '^ *(.+ *\[[0-9]+\.\.[0-9]+\] *\( *0 *\) *.+)$'
 
 # array inits coming soon...
 
@@ -67,6 +70,7 @@ def read_numerics_settings(srclines, num_names=None):
     return:
     the dict of numerical options, where keys=num_names, values are parsed from srclines
     """
+    
     vars_list=[]
     i_num_lines = np.nonzero([re.search('^ *(@) (.+)$', line, flags=re.IGNORECASE) is not None for line in srclines])[0]
     for i in i_num_lines:
@@ -151,13 +155,19 @@ def read_init_values(srclines, init_names=None):
     return:
     the dict of parameters, where keys=pars_names, values are parsed from srclines
     """
-    vars_list_sc1=[]
-    vars_list_sc2=[]
-    i_init_lines = np.nonzero([re.search(init_re_sc1+'|'+init_re_sc2, line, flags=re.IGNORECASE) is not None for line in srclines])[0]
+
+    vars_list_sc1=[];vars_list_sc2=[];vars_list_ar1=[];vars_list_ar2=[];vars_list_ar3=[]
+    i_init_lines = np.nonzero([re.search(init_re_sc1+'|'+\
+                                         init_re_sc2+'|'+\
+                                         init_re_ar1+'|'+\
+                                         init_re_ar2, line, flags=re.IGNORECASE) is not None for line in srclines])[0]
 
     for i in i_init_lines:
-        vars_list_sc1+=re.findall('([a-z0-9_]+) *= *([0-9\.e\-\+]+)', srclines[i].lower(), flags=re.IGNORECASE)
-        vars_list_sc2+=re.findall('([a-z0-9_]+\(0\)) *= *([0-9\.e\-\+]+)', srclines[i].lower(), flags=re.IGNORECASE)
+        vars_list_sc1+=re.findall('([a-z0-9_]+) *= *([0-9\.e\-\+]+)',srclines[i].lower(),flags=re.IGNORECASE)
+        vars_list_sc2+=re.findall('([a-z0-9_]+\(0\)) *= *([0-9\.e\-\+]+)',srclines[i].lower(),flags=re.IGNORECASE)
+        vars_list_ar1+=re.findall('([a-z0-9_]+\[[0-9]+\.\.[0-9]+\]\(0\)) *= *([0-9\.e\-\+]+)',srclines[i].lower(),flags=re.IGNORECASE)
+        vars_list_ar2+=re.findall('([a-z0-9_]+\[[0-9]+\.\.[0-9]+\]) *= *([0-9\.e\-\+]+)',srclines[i].lower(),flags=re.IGNORECASE)
+        vars_list_ar3+=re.findall('([a-z0-9_]+\[j\]) *= *([0-9\.e\-\+]+)',srclines[i].lower(),flags=re.IGNORECASE)
 
     # remove '(0)' from vars_list_sc2
     for i in range(len(vars_list_sc2)):
@@ -167,7 +177,17 @@ def read_init_values(srclines, init_names=None):
         tup2 = (var_pruned,tup[1])
         vars_list_sc2[i] = tup2
 
-    vars_list = vars_list_sc1 + vars_list_sc2
+    # remove '(0)' from vars_list_ar1
+    for i in range(len(vars_list_ar1)):
+        tup = vars_list_ar1[i]
+        var = tup[0]
+        var_pruned = var[:-3]
+        tup2 = (var_pruned,tup[1])
+        vars_list_ar1[i] = tup2
+
+    # implement remove '(0)' from vars_list_ar2
+    #print vars_list_sc1,vars_list_ar2
+    vars_list = vars_list_sc1 + vars_list_sc2 + vars_list_ar1 + vars_list_ar2 + vars_list_ar3
     d = dict(vars_list)
     if init_names is None:
         return d
@@ -192,10 +212,15 @@ def change_inits_in_ode_and_save(srclines, inits, newfilepath):
     inits - the dict of inits to set up new values, all keys in low register!
     newfilepath - path to a new ODE file with modified inits
     """
+    
     linits = {pn.lower():(lambda x: repr(x) if not isinstance(x,str) else x)(pv) for pn,pv in inits.iteritems()}
     pnames = linits.keys()
-    def repl_in_par(matchobj):
 
+    def repl_in_par(matchobj):
+        """
+        replace scalar inits
+        """
+        
         mog = matchobj.group(1).lower()
         # if init is used as v(0)=*, account for this fact.
         if matchobj.group(2) == '(0)':
@@ -211,9 +236,82 @@ def change_inits_in_ode_and_save(srclines, inits, newfilepath):
             else:
                 return matchobj.group(0)
 
+    def repl_in_ar(matchobj):
+        """
+        replace array inits
+        """
+
+        mog = matchobj.group(1).lower()
+
+        # if init is used as v(0)=*, account for this fact.
+        #print matchobj.group(1),'/',matchobj.group(2),'/',matchobj.group(3),'/',matchobj.group(4)
+
+        # get idx limits
+        idx = matchobj.group(2)
+        idx = idx.split('..')
+        low_idx = int(idx[0])
+        hi_idx = int(idx[-1])
+        idxrange = np.arange(low_idx,hi_idx+1,1)
+
+        #print idx,idxrange
+
+        # if the init contains (0), keep it. no particular reason, but sorta easier this way?
+        if matchobj.group(3) == '(0)':
+            #print 'sdfjkadsfasfd',mog
+
+            if mog in pnames:
+                # collect all inits into one explicit line
+                # this is where we convert from v[0..2]=1 syntax to v0=1,v1=1,v2=1 syntax.
+                #print mog
+                listval = linits[mog][1:-1]
+                listval = listval.split(',')
+
+                inits_new = ''
+                for i in range(len(idxrange)):
+                    #print idxrange[i]
+                    inits_new += matchobj.group(1)+str(idxrange[i])+matchobj.group(3)+'='+listval[i]+','
+
+                # trim trailing comma, force newline
+                inits_new = inits_new[:-1]
+
+                return inits_new
+
+                #print inits_new
+            else:
+                return matchobj.group(0)
+        else:
+
+            if mog in pnames:
+                # collect all inits into one explicit line
+                # this is where we convert from v[0..2]=1 syntax to v0=1,v1=1,v2=1 syntax.
+                #print mog
+
+                # remove list index brackets '[0,1,2]' -> '0,1,2'
+                listval = linits[mog][1:-1]
+                listval = listval.split(',')
+
+                inits_new = ''
+
+                for i in range(len(idxrange)):
+                    #print idxrange[i]
+                    inits_new += matchobj.group(1)+str(idxrange[i])+'='+listval[i]+','
+
+                # trim trailing comma
+                inits_new = inits_new[:-1]
+                return inits_new
+                #return matchobj.group(1)+matchobj.group(2)+linits[mog]
+            else:
+                return matchobj.group(0)
+
+
     # get lines of inits
-    i_par_lines = np.nonzero([re.search(init_re_sc1+'|'+init_re_sc2, line, flags=re.IGNORECASE) is not None for line in srclines])[0]
-    #print 'i_par_lines', i_par_lines
+    i_par_lines = np.nonzero([re.search(init_re_sc1+'|'+\
+                                        init_re_sc2,line,flags=re.IGNORECASE) is not None for line in srclines])[0]
+
+    # get lines of array inits
+    i_ar_lines = np.nonzero([re.search(init_re_ar1+'|'+\
+                                       init_re_ar2,line,flags=re.IGNORECASE) is not None for line in srclines])[0]
+    #print i_ar_lines
 
     # get line of 'done' flag. empty string if it does not exist.
     i_d_line = np.nonzero([re.search('^ *(d)|^ *(done)',line,flags=re.IGNORECASE) is not None for line in srclines])[0]
@@ -226,43 +324,19 @@ def change_inits_in_ode_and_save(srclines, inits, newfilepath):
         i_d_line = i_d_line[0]
 
     # mark which inits exist and which do not.
-
     dnelist = 'init '
     idx = 0
 
     # create list for deletion of state variable keys that do not exist
     delete_keys = []
 
-    # cram all inits into one line
+    # cram all inits into one line, to make it easy to check if state variable exists
     combinedlist = ''
     
     for i in range(len(i_par_lines)):
         combinedlist += srclines[i_par_lines[i]]
-    
-    """
-    # for each i_par_lines, iterate over variables    
-    for i in range(len(i_par_lines)):
 
-        # iterate over user-input initial conditions
-        for k in inits:
-            
-            
-            print k,srclines[i_par_lines[i]]
-            # if the user-input initial condition is not in the code...
-            # verify that this init is in fact a state variable
-            if not(k in srclines[i_par_lines[i]]):
-
-                vn = search_state_vars_in_srclines(srclines)
-
-                if k in vn: # if state variable exists, take note that the init was not defined in the ode script
-                    dnelist += k+'='+str(inits[k])
-                else:
-                    # if the state variable does not exist, ignore.
-                    delete_keys.append(k)
-    """
-
-    # for each i_par_lines, iterate over variables    
-    
+    # check if user-input initial conditions exist.
     # iterate over user-input initial conditions
     for k in inits:
             
@@ -275,7 +349,7 @@ def change_inits_in_ode_and_save(srclines, inits, newfilepath):
             if k in vn: # if state variable exists, take note that the init was not defined in the ode script
                 dnelist += k+'='+str(inits[k])
             else:
-                # if the state variable does not exist, ignore.
+                # if the state variable does not exist in the ODE file, ignore.
                 delete_keys.append(k)
 
     # delete the state variables that do not exist
@@ -291,11 +365,13 @@ def change_inits_in_ode_and_save(srclines, inits, newfilepath):
         srclines.append('d')
     #print srclines
 
-
-    
     nsrclines=srclines[:]
     for i in i_par_lines:
-        nsrclines[i] = re.sub('([a-z0-9_]+)( *\( *0 *\) *)( *= *)([0-9\.e\-\+]+)', repl_in_par, nsrclines[i], flags=re.IGNORECASE)
+        nsrclines[i] = re.sub('([a-z0-9_]+)( *\( *0 *\) *)?( *= *)([0-9\.e\-\+]+)', repl_in_par, nsrclines[i], flags=re.IGNORECASE)
+
+    for i in i_ar_lines:
+        nsrclines[i] = re.sub('([a-z0-9_]+)\[([0-9]+..[0-9]+)\]( *\( *0 *\) *)?( *= *)([0-9\.e\-\+]+)', repl_in_ar, nsrclines[i], flags=re.IGNORECASE)
+
 
     nsrc = ''.join(nsrclines)
     with open(newfilepath, 'w') as f:
@@ -304,10 +380,15 @@ def change_inits_in_ode_and_save(srclines, inits, newfilepath):
 
 def check_if_in_ode(srclines,inits):
     """
+    DEPRECATED 
+    
     check whether a set of inits are listed in an ODE
     return {dictonary of existing guys}, {dictionary of nonexisting guys}
     """
-    i_par_lines = np.nonzero([re.search(init_re_sc1+'|'+init_re_sc2, line, flags=re.IGNORECASE) is not None for line in srclines])[0]
+    i_par_lines = np.nonzero([re.search(init_re_sc1+'|'+\
+                                        init_re_sc2+'|'+\
+                                        init_re_ar1+'|'+\
+                                        init_re_ar2, line, flags=re.IGNORECASE) is not None for line in srclines])[0]
     return i_par_lines
 
 
