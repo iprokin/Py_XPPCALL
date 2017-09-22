@@ -6,6 +6,7 @@ f(u,v)=-u+v*u^2
 g(u,v)=a-v*u^2
 u0'=f(u0,v0)+duh*(u1-u0)
 v0'=g(u0,v0)+dvh*(v1-v0)
+
 %[1..3]
 u[j]'=f(u[j],v[j])+duh*(u[j+1]-2*u[j]+u[j-1])
 v[j]'=g(u[j],v[j])+dvh*(v[j+1]-2*v[j]+v[j-1])

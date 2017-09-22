@@ -8,26 +8,26 @@ import matplotlib.pylab as plt
 import numpy as np
 from xppcall import xpprun, read_pars, read_inits, read_numerics
 
-# check if parameters with label 'p' will work
+# Check if parameters with label 'p' will work
 # add function to change inits.
 
 # Let's check what are the parameters of the model
-pars = read_pars('schnakenberg.ode')
+pars = read_pars('wc.ode')
 print 'pars',pars
 
 # print inits
-inits = read_inits('schnakenberg.ode')
+inits = read_inits('wc.ode')
 print 'default inits',inits
 
 # print options
-numerics = read_numerics('schnakenberg.ode')
+numerics = read_numerics('wc.ode')
 print 'numerics', numerics
 
 
 # run ODE and get solution with default inits
 
 # Let's plot a solution with default parameters and inits specified in the .ODE file
-npa, vn = xpprun('schnakenberg.ode', clean_after=True)
+npa, vn = xpprun('wc.ode', clean_after=True)
 t = npa[:,0]
 sv = npa[:,1:] #(501 time steps, 202 variables)
 
@@ -45,12 +45,12 @@ ax1.plot(sv[:,0],sv[:,1],lw=2)
 
 
 # modify a param
-npa, vn = xpprun('schnakenberg.ode', parameters={'a':5}, clean_after=True)
+npa, vn = xpprun('wc.ode', parameters={'tau':1}, clean_after=True)
 t = npa[:,0]
 sv = npa[:,1:]
 
 ax2 = fig.add_subplot(122)
-ax2.set_title('default inits and new param (a)')
+ax2.set_title('default inits and new param (se)')
 ax2.plot(sv[:,0],sv[:,1],lw=2)
 #ax2.set_xlim([-1.05,1.05])
 #ax2.set_ylim([-1.05,1.05])
@@ -62,7 +62,7 @@ ax2.plot(sv[:,0],sv[:,1],lw=2)
 # now let's modify an entire array of initial conditions
 # the index number must correspond to the number in the xpp array. e.g. if 
 # init u[3..100] then we must define a list with 98 elements
-npa, vn = xpprun('schnakenberg.ode', inits={'u':[1.,2.]}, clean_after=False)
+npa, vn = xpprun('wc.ode', inits={'u':[.1,-.2,.3,.4,.5]}, clean_after=True)
 t = npa[:,0]
 sv = npa[:,1:]
 
@@ -72,13 +72,13 @@ ax1 = fig2.add_subplot(121)
 ax1.set_title('new inits with default params')
 ax1.plot(sv[:,0],sv[:,1],lw=2)
 
-npa, vn = xpprun('schnakenberg.ode', inits={'u':[1.,2.]}, parameters={'a':5}, clean_after=True)
+npa, vn = xpprun('wc.ode', inits={'u':[.1,-.2,.3,.4,.5],'v':[.0,.2,.5,-.5,.9]}, parameters={'tau':1}, clean_after=False)
 t = npa[:,0]
 sv = npa[:,1:]
 
 
 ax2 = fig2.add_subplot(122)
-ax2.set_title('new inits with new param (a)')
+ax2.set_title('new inits with new param (se)')
 ax2.plot(sv[:,0],sv[:,1],lw=2)
 
 """

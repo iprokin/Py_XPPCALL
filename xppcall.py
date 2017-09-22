@@ -51,15 +51,54 @@ def search_state_vars_in_srclines(srclines):
     the list of names of found state variables
     """
     der=[]; aux=[]
+
+    # find scalar defined vars
     for line in srclines:
         so=re.search('^ *d([a-zA-Z0-9_]+)/dt[ \t]*=|^ *([a-zA-Z0-9_]+)\'[ \t]*=|^ *aux +([a-zA-Z0-9_]+) *=', line, flags=re.IGNORECASE)
+        
         if so is not None:
+            #print so.group(1),so.group(2),so.group(3)
             if so.group(1) is not None:
                 der.append(so.group(1).lower())
             elif so.group(2) is not None:
                 der.append(so.group(2).lower())
             else:
                 aux.append(so.group(3).lower())
+
+    # find array defined vars
+    for line in srclines:
+        so=re.search('^ *([a-zA-Z0-9_]+)(\[[0-9]+\.\.[0-9]+\])\'[ \t]*=|^ *aux +([a-zA-Z0-9_]+)(\[[0-9]+\.\.[0-9]+\]) *=', line, flags=re.IGNORECASE)
+
+        
+        
+        if so is not None:
+            
+                    
+            #print so.group(1),so.group(2),so.group(3)
+            if so.group(1) is not None:
+                # make sure array portion is nonempty
+                if so.group(2) is not None:
+                    # strip list brack off ends
+                    indices = so.group(2)[1:-1]
+                    
+                    # get lower and upper numbers of list
+                    indices = indices.split('..') 
+                    
+                    low_idx = int(indices[0])
+                    hi_idx = int(indices[-1])
+                    idxrange = np.arange(low_idx,hi_idx+1,1)
+                    print idxrange
+                    
+                    for i in range(len(idxrange)):
+                        der.append(so.group(1)+str(idxrange[i]).lower())
+
+                #der.append(so.group(1).lower())
+            elif so.group(2) is not None:
+                der.append(so.group(2).lower())
+            else:
+                aux.append(so.group(3).lower())
+
+    #print der,aux
     return der+aux
 
 def read_numerics_settings(srclines, num_names=None):
@@ -164,8 +203,8 @@ def read_init_values(srclines, init_names=None):
 
     for i in i_init_lines:
         vars_list_sc1+=re.findall('([a-z0-9_]+) *= *([0-9\.e\-\+]+)',srclines[i].lower(),flags=re.IGNORECASE)
-        vars_list_sc2+=re.findall('([a-z0-9_]+\(0\)) *= *([0-9\.e\-\+]+)',srclines[i].lower(),flags=re.IGNORECASE)
-        vars_list_ar1+=re.findall('([a-z0-9_]+\[[0-9]+\.\.[0-9]+\]\(0\)) *= *([0-9\.e\-\+]+)',srclines[i].lower(),flags=re.IGNORECASE)
+        vars_list_sc2+=re.findall('([a-z0-9_]+ *\( *0 *\)) *= *([0-9\.e\-\+]+)',srclines[i].lower(),flags=re.IGNORECASE)
+        vars_list_ar1+=re.findall('([a-z0-9_]+\[[0-9]+\.\.[0-9]+\] *\( *0 *\)) *= *([0-9\.e\-\+]+)',srclines[i].lower(),flags=re.IGNORECASE)
         vars_list_ar2+=re.findall('([a-z0-9_]+\[[0-9]+\.\.[0-9]+\]) *= *([0-9\.e\-\+]+)',srclines[i].lower(),flags=re.IGNORECASE)
         vars_list_ar3+=re.findall('([a-z0-9_]+\[j\]) *= *([0-9\.e\-\+]+)',srclines[i].lower(),flags=re.IGNORECASE)
 
@@ -223,7 +262,7 @@ def change_inits_in_ode_and_save(srclines, inits, newfilepath):
         
         mog = matchobj.group(1).lower()
         # if init is used as v(0)=*, account for this fact.
-        if matchobj.group(2) == '(0)':
+        if matchobj.group(2) != None:
 
             if mog in pnames:
                 return matchobj.group(1)+matchobj.group(2)+matchobj.group(3)+linits[mog]
@@ -232,7 +271,7 @@ def change_inits_in_ode_and_save(srclines, inits, newfilepath):
         else:
 
             if mog in pnames:
-                return matchobj.group(1)+matchobj.group(2)+linits[mog]
+                return matchobj.group(1)+matchobj.group(3)+linits[mog]
             else:
                 return matchobj.group(0)
 
@@ -256,7 +295,7 @@ def change_inits_in_ode_and_save(srclines, inits, newfilepath):
         #print idx,idxrange
 
         # if the init contains (0), keep it. no particular reason, but sorta easier this way?
-        if matchobj.group(3) == '(0)':
+        if matchobj.group(3) != None:
             #print 'sdfjkadsfasfd',mog
 
             if mog in pnames:
@@ -265,6 +304,9 @@ def change_inits_in_ode_and_save(srclines, inits, newfilepath):
                 #print mog
                 listval = linits[mog][1:-1]
                 listval = listval.split(',')
+
+                if len(listval) != len(idxrange):
+                    raise ValueError('make sure ode array numbers coincide with the number of initial conditions. e.g. if v[1..3](0)=1, v0(0)=2, and you want to change the inits to v0=1,v1=4,v2=5,v3=6, then use inits {\'v0\':1,\'v\':[4,5,6]}')
 
                 inits_new = ''
                 for i in range(len(idxrange)):
@@ -292,6 +334,8 @@ def change_inits_in_ode_and_save(srclines, inits, newfilepath):
 
                 inits_new = ''
 
+                
+                print mog,pnames,idxrange
                 for i in range(len(idxrange)):
                     #print idxrange[i]
                     inits_new += matchobj.group(1)+str(idxrange[i])+'='+listval[i]+','
