@@ -94,7 +94,6 @@ def search_state_vars_in_srclines(srclines):
 
                 #der.append(so.group(1).lower())
             elif so.group(2) is not None:
-
                 der.append(so.group(2).lower())
             else:
                 aux.append(so.group(3).lower())
@@ -306,9 +305,7 @@ def change_inits_in_ode_and_save(srclines, inits, newfilepath):
                 listval = linits[mog][1:-1]
                 listval = listval.split(',')
 
-                if (int(listval[-1]) != idxrange[-1]) or\
-                   (int(listval[0]) != idxrange[0]) or \
-                   len(listval) != len(idxrange):
+                if len(listval) != len(idxrange):
                     raise ValueError('make sure ode array numbers coincide with the number of initial conditions. e.g. if v[1..3](0)=1, v0(0)=2, and you want to change the inits to v0=1,v1=4,v2=5,v3=6, then use inits {\'v0\':1,\'v\':[4,5,6]}')
 
                 inits_new = ''
