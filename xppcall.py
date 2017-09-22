@@ -54,7 +54,7 @@ def search_state_vars_in_srclines(srclines):
 
     # find scalar defined vars
     for line in srclines:
-        so=re.search('^ *d([a-zA-Z0-9_]+)/dt[ \t]*=|^ *aux +([a-zA-Z0-9_]+) *=', line, flags=re.IGNORECASE)
+        so=re.search('^ *d([a-zA-Z0-9_]+)/dt[ \t]*=|^ *([a-zA-Z0-9_]+)\'[ \t]*=|^ *aux +([a-zA-Z0-9_]+) *=', line, flags=re.IGNORECASE)
         
         if so is not None:
             #print so.group(1),so.group(2),so.group(3)
