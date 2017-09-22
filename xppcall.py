@@ -232,7 +232,7 @@ def change_inits_in_ode_and_save(srclines, inits, newfilepath):
         else:
 
             if mog in pnames:
-                return matchobj.group(1)+matchobj.group(2)+linits[mog]
+                return matchobj.group(1)+matchobj.group(3)+linits[mog]
             else:
                 return matchobj.group(0)
 
