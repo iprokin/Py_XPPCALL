@@ -54,32 +54,30 @@ def search_state_vars_in_srclines(srclines):
 
     # find scalar defined vars
     for line in srclines:
-        so=re.search('^ *d([a-zA-Z0-9_]+)/dt[ \t]*=|^ *([a-zA-Z0-9_]+)\'[ \t]*=|^ *aux +([a-zA-Z0-9_]+) *=', line, flags=re.IGNORECASE)
-        
-        if so is not None:
-            #print so.group(1),so.group(2),so.group(3)
-            if so.group(1) is not None:
-                der.append(so.group(1).lower())
-            elif so.group(2) is not None:
-                der.append(so.group(2).lower())
-            else:
-                aux.append(so.group(3).lower())
+        #print line
 
-    # find array defined vars
-    for line in srclines:
-        so=re.search('^ *([a-zA-Z0-9_]+)(\[[0-9]+\.\.[0-9]+\])\'[ \t]*=|^ *aux +([a-zA-Z0-9_]+)(\[[0-9]+\.\.[0-9]+\]) *=', line, flags=re.IGNORECASE)
+        # find scalar vars
+        so_sc=re.search('^ *d([a-zA-Z0-9_]+)/dt[ \t]*=|^ *([a-zA-Z0-9_]+)\'[ \t]*=|^ *aux +([a-zA-Z0-9_]+) *=', line, flags=re.IGNORECASE)
 
+        # find array vars
+        so_ar=re.search('^ *([a-zA-Z0-9_]+)(\[[0-9]+\.\.[0-9]+\])\'[ \t]*=|^ *aux +([a-zA-Z0-9_]+)(\[[0-9]+\.\.[0-9]+\]) *=', line, flags=re.IGNORECASE)
         
         
-        if so is not None:
+        if so_sc is not None:
             
-                    
-            #print so.group(1),so.group(2),so.group(3)
-            if so.group(1) is not None:
+            if so_sc.group(1) is not None:
+                der.append(so_sc.group(1).lower())
+            elif so_sc.group(2) is not None:
+                der.append(so_sc.group(2).lower())
+            else:
+                aux.append(so_sc.group(3).lower())
+
+        if so_ar is not None:
+            if so_ar.group(1) is not None:
                 # make sure array portion is nonempty
-                if so.group(2) is not None:
+                if so_ar.group(2) is not None:
                     # strip list brack off ends
-                    indices = so.group(2)[1:-1]
+                    indices = so_ar.group(2)[1:-1]
                     
                     # get lower and upper numbers of list
                     indices = indices.split('..') 
@@ -90,13 +88,13 @@ def search_state_vars_in_srclines(srclines):
                     print idxrange
                     
                     for i in range(len(idxrange)):
-                        der.append(so.group(1)+str(idxrange[i]).lower())
+                        der.append(so_ar.group(1)+str(idxrange[i]).lower())
 
-                #der.append(so.group(1).lower())
-            elif so.group(2) is not None:
-                der.append(so.group(2).lower())
+            elif so_ar.group(2) is not None:
+                der.append(so_ar.group(2).lower())
             else:
-                aux.append(so.group(3).lower())
+                aux.append(so_ar.group(3).lower())
+
 
     #print der,aux
     return der+aux
