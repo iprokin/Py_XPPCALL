@@ -309,7 +309,7 @@ def change_inits_in_ode_and_save(srclines, inits, newfilepath):
                 inits_new = ''
                 for i in range(len(idxrange)):
                     #print idxrange[i]
-                    inits_new += matchobj.group(1)+str(idxrange[i])+matchobj.group(3)+'='+listval[i]+','
+                    inits_new += matchobj.group(1)+str(idxrange[i])+matchobj.group(3)+'='+listval[i]+'\n'
 
                 # trim trailing comma, force newline
                 inits_new = inits_new[:-1]
