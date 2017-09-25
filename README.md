@@ -1,3 +1,5 @@
+### Introduction
+
 [XPPAUT](http://www.math.pitt.edu/~bard/xpp/xpp.html) is a great
 software for the analysis of dynamical systems. Many mathematical models
 have been implemented with XPPAUT (\*.ODE file format) \[search for
@@ -17,6 +19,23 @@ available.
 
 Py\_XPPCALL is easy to use and does not require installation. Simply put
 **xppcall.py** to your python path or current folder.
+
+Features:
+We pay particular attention to the easy modification of input options, initial conditions, parameters, and the intuitive access to output data. In particular, within python you can:
+* Modify scalar or array initial conditions
+* Modify parameters and numerics options
+* Grab output data for each state variable
+
+These features allow users to take full advantage of the existing scientific libraries in python for data manipulation. In fact the abilities are virtually identical to those listed in the matlab-xpp interface website <http://www2.gsu.edu/~matrhc/XPP-Matlab.html>. Here they are, verbatim:
+
+(a) If you are not an advanced XPP user, and you don't understand how to set up multi-parameter / initial condition (I.C.) range integration batch jobs in XPP, or you find doing so too fussy and prone to mistakes. You may want to vary more than 2 parameters or I.C.s. without specifying a large table of pre-determined values within XPP, or you want to allow a user to set up the ranges interactively in Matlab.
+
+(b) Furthermore, you might want to run Matlab scripts that adaptively select parameter values or I.C.s based on the results of previous XPP integration results (e.g. parameter estimation algorithms, "shooting" methods, etc.).
+
+(c) You can do data analysis on the integrated orbits without writing dynamic link libraries (usually in C) that are called from within your .ode script. (Some institutional installations of XPP may not have been done with the DLL option set, which can be a problem.) Also, you can take advantage of Matlab's built-in statistical tools and visualization capabilities.
+
+(d) You don't need an X server on a Windows platform to run XPP in silent mode, so I guess these functions might make XPP a little more usable in the event that you don't have a working X server in Windows!
+
 
 ### An example of usage with Hodgkin-Huxley neuron model for numerical optimization
 
