@@ -20,7 +20,7 @@ available.
 Py\_XPPCALL is easy to use and does not require installation. Simply put
 **xppcall.py** to your python path or current folder.
 
-Features:
+### Features
 We pay particular attention to the easy modification of input options, initial conditions, parameters, and the intuitive access to output data. In particular, within python you can:
 * Modify scalar or array initial conditions
 * Modify parameters and numerics options
@@ -36,8 +36,10 @@ These features allow users to take full advantage of the existing scientific lib
 
 (d) You don't need an X server on a Windows platform to run XPP in silent mode, so I guess these functions might make XPP a little more usable in the event that you don't have a working X server in Windows!
 
+### Examples
+Please see the several python example files for syntax usage. We also comment the xppcall.py file extensively.
 
-### An example of usage with Hodgkin-Huxley neuron model for numerical optimization
+#### An example of usage with Hodgkin-Huxley neuron model for numerical optimization
 
 I extracted the ODE source code of Hodgkin-Huxley model  from the
 example at the website of
