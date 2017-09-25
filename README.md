@@ -37,7 +37,7 @@ These features allow users to take full advantage of the existing scientific lib
 (d) You don't need an X server on a Windows platform to run XPP in silent mode, so I guess these functions might make XPP a little more usable in the event that you don't have a working X server in Windows!
 
 ### Examples
-Please see the several python example files for syntax usage. We also comment the xppcall.py file extensively.
+Please see the several python example files for syntax usage (Py_XPPCALL_Example\*.py). We also comment the xppcall.py file extensively.
 
 #### An example of usage with Hodgkin-Huxley neuron model for numerical optimization
 
