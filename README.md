@@ -145,13 +145,13 @@ Congrats! We got a pretty good fit.
 
 If you want to refer to Py_XPPCALL in a publication, you can use 
 
-"Prokin, I. and Park, Y. Py_XPPCALL. 2017. Available at: https://github.com/iprokin/Py_XPPCALL."
+`"Prokin, I. and Park, Y. Py_XPPCALL. 2017. Available at: https://github.com/iprokin/Py_XPPCALL."`
 
 or BibTeX:
 
-@misc{xppy, 
+`@misc{xppy, 
       author = {Prokin, Ilya and Park, Youngmin}, 
       title = {{Py_XPPCALL}}, 
       url = {https://github.com/iprokin/Py_XPPCALL}, 
       year = {2017} 
-}
+}`
