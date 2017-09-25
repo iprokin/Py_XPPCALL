@@ -85,7 +85,7 @@ def search_state_vars_in_srclines(srclines):
                     low_idx = int(indices[0])
                     hi_idx = int(indices[-1])
                     idxrange = np.arange(low_idx,hi_idx+1,1)
-                    print idxrange
+                    #print idxrange
                     
                     for i in range(len(idxrange)):
                         der.append(so_ar.group(1)+str(idxrange[i]).lower())
@@ -95,8 +95,6 @@ def search_state_vars_in_srclines(srclines):
             else:
                 aux.append(so_ar.group(3).lower())
 
-
-    #print der,aux
     return der+aux
 
 def read_numerics_settings(srclines, num_names=None):
@@ -263,15 +261,23 @@ def change_inits_in_ode_and_save(srclines, inits, newfilepath):
         if matchobj.group(2) != None:
 
             if mog in pnames:
-                return matchobj.group(1)+matchobj.group(2)+matchobj.group(3)+linits[mog]
+                out = matchobj.group(1)+matchobj.group(2)+matchobj.group(3)+linits[mog]
+                out = out.replace(" ","")
+                return out
             else:
-                return matchobj.group(0)
+                out = matchobj.group(0)
+                out = out.replace(" ","")
+                return out
         else:
 
             if mog in pnames:
-                return matchobj.group(1)+matchobj.group(3)+linits[mog]
+                out = matchobj.group(1)+matchobj.group(3)+linits[mog]
+                out = out.replace(" ","")
+                return out
             else:
-                return matchobj.group(0)
+                out = matchobj.group(0)
+                out = out.replace(" ","")
+                return out
 
     def repl_in_ar(matchobj):
         """
@@ -303,6 +309,8 @@ def change_inits_in_ode_and_save(srclines, inits, newfilepath):
                 listval = linits[mog][1:-1]
                 listval = listval.split(',')
 
+                #print listval
+
                 if len(listval) != len(idxrange):
                     raise ValueError('make sure ode array numbers coincide with the number of initial conditions. e.g. if v[1..3](0)=1, v0(0)=2, and you want to change the inits to v0=1,v1=4,v2=5,v3=6, then use inits {\'v0\':1,\'v\':[4,5,6]}')
 
@@ -313,11 +321,13 @@ def change_inits_in_ode_and_save(srclines, inits, newfilepath):
 
                 # trim trailing comma, force newline
                 inits_new = inits_new[:-1]
-
+                inits_new = inits_new.replace(" ","")
+                
                 return inits_new
 
                 #print inits_new
             else:
+                
                 return matchobj.group(0)
         else:
 
@@ -340,6 +350,8 @@ def change_inits_in_ode_and_save(srclines, inits, newfilepath):
 
                 # trim trailing comma
                 inits_new = inits_new[:-1]
+                inits_new = inits_new.replace(" ","")
+
                 return inits_new
                 #return matchobj.group(1)+matchobj.group(2)+linits[mog]
             else:
@@ -500,10 +512,15 @@ def xpprun(filepath, version=8, xppname='xppaut', postfix='_tmp', parameters=Non
         try:
             res = subprocess.check_output("%s %s -silent -outfile %s" % (xppname, fullfilename, outputfilepath), stderr=subprocess.STDOUT, shell=True)
             os.chdir(wd)
+
             out = np.genfromtxt(outputfilepath, delimiter=' ')
+
+
             vn = search_state_vars_in_srclines(srclines)
             ret = out, vn
+
         except:
+
             ret = None
 
 
@@ -532,7 +549,7 @@ def xpprun(filepath, version=8, xppname='xppaut', postfix='_tmp', parameters=Non
         else:
             fullfilename = os.path.join(path, filename)
 
-
+        
         outputfile = 'output.dat'
         outputfilepath = os.path.join(path, outputfile)
 
@@ -540,13 +557,18 @@ def xpprun(filepath, version=8, xppname='xppaut', postfix='_tmp', parameters=Non
 
             res = subprocess.check_output("%s %s -silent -with '%s' -runnow -outfile %s" % (xppname, fullfilename, inputstr,outputfilepath), stderr=subprocess.STDOUT, shell=True)
 
+
             os.chdir(wd)
 
             out = np.genfromtxt(outputfilepath, delimiter=' ')
 
+
             vn = search_state_vars_in_srclines(srclines)
 
+
             ret = out, vn
+
+
             
         except:
             print 'xpp was not called properly. check that xpp is installed and its alias.'
