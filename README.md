@@ -47,7 +47,7 @@ XPPAUT <http://www.math.pitt.edu/~bard/bardware/tut/newstyle.html#hh>. I
 saved it as hh.ode. I put it to the same folder where I have xppcall.py
 and ran python from there. 
 
-``` {.python}
+```python
 ## Py_XPPCALL Example
 
 # import some modules including Py_XPPCALL
@@ -73,7 +73,7 @@ Out[]: 
      'vna': '50'}
 ```
 
-``` {.python}
+```python
 # Note: XPPAUT is not case sensitive. In Py_XPPCALL, the names of parameters and variables were chosen to be in lower case.
 
 # Let's plot solution for membrane potential with parameters specified in .ODE file
@@ -88,7 +88,7 @@ Out[]:
 
 [![](py_xppcall-a-python-binding-to-xppaut/1.png)](py_xppcall-a-python-binding-to-xppaut/1.png)
 
-``` {.python}
+```python
 # Let's modify constant input current
 npa, vn = xpprun('hh.ode', parameters={'i':20.0}, clean_after=True)
 plt.figure()
@@ -101,7 +101,7 @@ Out[]:
 
 [![](py_xppcall-a-python-binding-to-xppaut/2.png)](py_xppcall-a-python-binding-to-xppaut/2.png)
 
-``` {.python}
+```python
 # Example of an optimization using fmin from SciPy
 from scipy.optimize import fmin
 
@@ -115,7 +115,7 @@ plt.plot(npa[:,0], target_v)
 Out[]:
 ```
 
-``` {.python}
+```python
 # define objective_func we want to minimize
 def objective_func(x, target=target_v):
     try:
