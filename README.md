@@ -4,14 +4,12 @@
 software for the analysis of dynamical systems. Many mathematical models
 have been implemented with XPPAUT (\*.ODE file format) \[search for
 examples at <http://senselab.med.yale.edu/modeldb/>\]. These
-implementations could be used to reproduce computational experiments and
-to quickly test ideas related to them. For instance, one could perform
-the sensitivity analysis of model’s parameters or parameters’ space
-searches. However, due to the graphical nature of XPPAUT, the batch
+implementations could be used to quickly reproduce computational experiments and test ideas.
+For instance, one could perform sensitivity analysis of model’s parameters or search parameter space. However, due to the graphical nature of XPPAUT, the batch
 modification of parameters of these models is problematic. 
 
-Here I describe the solution for this problem using simple python module
-**Py\_XPPCALL** that I have written to interface with XPPAUT. It allows
+Here we describe the solution for this problem using simple python module
+**Py\_XPPCALL** that we have written to interface with XPPAUT. It allows
 you to batch-modify model’s parameters and returns corresponding
 solutions. An analogous software exists,
 <https://github.com/jsnowacki/xppy>, however little documentation is
@@ -41,10 +39,10 @@ Please see the several python example files for syntax usage (Py_XPPCALL_Example
 
 #### An example of usage with Hodgkin-Huxley neuron model for numerical optimization
 
-I extracted the ODE source code of Hodgkin-Huxley model  from the
+We extracted the ODE source code of Hodgkin-Huxley model from the
 example at the website of
 XPPAUT <http://www.math.pitt.edu/~bard/bardware/tut/newstyle.html#hh>. I
-saved it as hh.ode. I put it to the same folder where I have xppcall.py
+saved it as hh.ode. We put it to the same folder where we have xppcall.py
 and ran python from there. 
 
 ```python
@@ -60,7 +58,7 @@ pars = read_pars_values_from_file('hh.ode')
 print pars
 ```
 
-``` {style="line-height:16.25px;color:rgb(0,0,0)"}
+```
 Out[]: 
 
     {'c': '1',
@@ -82,7 +80,7 @@ plt.figure()
 plt.plot(npa[:,0], npa[:, 1+vn.index('v')])
 ```
 
-``` {style="line-height:16.25px;color:rgb(0,0,0)"}
+```
 Out[]:
 ```
 
@@ -95,7 +93,7 @@ plt.figure()
 plt.plot(npa[:,0], npa[:, 1+vn.index('v')])
 ```
 
-``` {style="line-height:16.25px;color:rgb(0,0,0)"}
+```
 Out[]:
 ```
 
@@ -111,7 +109,7 @@ plt.figure()
 plt.plot(npa[:,0], target_v)
 ```
 
-``` {style="line-height:16.25px;color:rgb(0,0,0)"}
+```
 Out[]:
 ```
 
@@ -133,7 +131,7 @@ plt.plot(npa[:,0], target_v, label='target')
 plt.legend()
 ```
 
-``` {style="line-height:16.25px;color:rgb(0,0,0)"}
+```
 Out[]:
 ```
 
