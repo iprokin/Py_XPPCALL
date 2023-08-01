@@ -164,7 +164,7 @@ def change_parameters_in_ode_and_save(srclines, parameters, newfilepath):
     parameters - the dict of parameters to set up new values, all keys in low register!
     newfilepath - path to a new ODE file with modified parameters
     """
-    lparameters = {pn.lower():(lambda x: repr(x) if not isinstance(x,str) else x)(pv) for pn,pv in parameters.iteritems()}
+    lparameters = {pn.lower():(lambda x: repr(x) if not isinstance(x,str) else x)(pv) for pn,pv in parameters.items()}
     pnames = lparameters.keys()
     def repl_in_par(matchobj):
         mog = matchobj.group(1).lower()
@@ -248,7 +248,7 @@ def change_inits_in_ode_and_save(srclines, inits, newfilepath):
     newfilepath - path to a new ODE file with modified inits
     """
     
-    linits = {pn.lower():(lambda x: repr(x) if not isinstance(x,str) else x)(pv) for pn,pv in inits.iteritems()}
+    linits = {pn.lower():(lambda x: repr(x) if not isinstance(x,str) else x)(pv) for pn,pv in inits.items()}
     pnames = linits.keys()
 
     def repl_in_par(matchobj):
